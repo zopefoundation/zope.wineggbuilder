@@ -71,7 +71,9 @@ class Git(object):
 
     def clone(self, url, folder):
         command = 'git clone %s %s' % (url, folder)
-        return self.cmd.do(command)
+        r = self.cmd.do(command)
+        self.cmd.cwd = folder  # hackish attempt to constrain commands to cwd
+        return r
 
     def checkout(self, branch):
         command = 'git checkout %s' % branch
