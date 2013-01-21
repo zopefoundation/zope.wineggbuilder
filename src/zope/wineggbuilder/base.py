@@ -63,6 +63,9 @@ class Command(object):
 
 
 class Git(object):
+    #hook to enable testing
+    commandKlass = Command
+
     def __init__(self, exitOnError=True):
         self.cmd = self.commandKlass(exitOnError=exitOnError)
 
