@@ -162,6 +162,10 @@ class Package(object):
 
         status.setVersions(self, versions)
 
+        def skip(version):
+            for target in self.targets:
+                status.setStatus(self, version, "skip", target)
+
         #1.1 filter versions according to minVersion and maxVersion:
         if self.minVersion:
             minver = StrictVersion(self.minVersion)
@@ -170,6 +174,8 @@ class Package(object):
                 try:
                     if StrictVersion(v) >= minver:
                         ov.append(v)
+                    else:
+                        skip(v)
                 except ValueError:
                     pass
             versions = ov
@@ -181,12 +187,19 @@ class Package(object):
                 try:
                     if StrictVersion(v) <= maxver:
                         ov.append(v)
+                    else:
+                        skip(v)
                 except ValueError:
                     pass
             versions = ov
 
-        versions = [v for v in versions
-                    if v not in self.excludeVersions]
+        ov = []
+        for v in versions:
+            if v in self.excludeVersions:
+                skip(v)
+            else:
+                ov.append(v)
+        versions = ov
 
         versions.sort()
         if len(versions) == 0:
