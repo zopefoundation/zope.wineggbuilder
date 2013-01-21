@@ -14,19 +14,14 @@
 """base classes
 """
 __docformat__ = 'ReStructuredText'
-import StringIO
-import base64
-import httplib
 import logging
 import optparse
 import os
-import pkg_resources
 import shutil
 import subprocess
 import sys
 import stat
 import urllib2
-import urlparse
 import xmlrpclib
 
 LOGGER = logging.Logger('build')
@@ -66,8 +61,21 @@ class Command(object):
         LOGGER.debug('Output: \n%s' % stdout)
         return stdout
 
-class SVN(object):
 
+class Git(object):
+    def __init__(self, exitOnError=True):
+        self.cmd = self.commandKlass(exitOnError=exitOnError)
+
+    def clone(self, url, folder):
+        command = 'git clone %s %s' % (url, folder)
+        return self.cmd.do(command)
+
+    def checkout(self, branch):
+        command = 'git checkout %s' % branch
+        return self.cmd.do(command)
+
+
+class SVN(object):
     user = None
     passwd = None
     forceAuth = False
