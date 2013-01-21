@@ -116,6 +116,7 @@ class Compiler(object):
         if tmpfile:
             os.remove(tmpfile)
 
+
 class Package(object):
     #hook to enable testing
     pypiKlass = base.PYPI
@@ -284,8 +285,8 @@ class Status(object):
     def log(self):
         text = ['\n']
         targets = sorted(self.targets.keys())
-        vs = ' '.join(['='*10 for target in targets])
-        sep = "%s %s" % ('='*20, vs)
+        vs = ' '.join(['=' * 10 for target in targets])
+        sep = "%s %s" % ('=' * 20, vs)
 
         for pname in sorted(self.data.keys()):
             package = self.data[pname]
