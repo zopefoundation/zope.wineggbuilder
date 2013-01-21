@@ -14,19 +14,11 @@
 """Main builder stuff
 """
 __docformat__ = 'ReStructuredText'
-import StringIO
-import base64
-import httplib
 import logging
-import optparse
 import os
-import pkg_resources
 import re
-import subprocess
 import sys
 import tempfile
-import urllib2
-import urlparse
 from collections import defaultdict
 
 import BeautifulSoup
@@ -36,6 +28,7 @@ from distutils.version import StrictVersion
 from zope.wineggbuilder import base
 
 LOGGER = base.LOGGER
+
 
 def getOption(config, section, name, default=None):
     try:
@@ -128,6 +121,7 @@ class Package(object):
     pypiKlass = base.PYPI
     urlGetterKlass = base.URLGetter
     svnKlass = base.SVN
+    gitKlass = base.Git
 
     def __init__(self, sectionName, config, options, compilers):
         self.sectionName = sectionName
@@ -138,15 +132,22 @@ class Package(object):
         self.name = config.get(sectionName, 'package')
         self.pypiurl = getOption(config, sectionName, 'pypiurl',
                                  'http://pypi.python.org/simple/%s/' % self.name)
-        self.tagurl = getOption(config, sectionName, 'tagurl',
-                                'svn://svn.zope.org/repos/main/%s/tags' % self.name)
-        if self.tagurl.endswith('/'):
-            self.tagurl = self.tagurl[:-1]
+        self.repotype = getOption(config, sectionName, 'repotype', 'svn')
+        if self.repotype == 'svn':
+            self.tagurl = getOption(config, sectionName, 'tagurl',
+                                    'svn://svn.zope.org/repos/main/%s/tags' % self.name)
+            if self.tagurl.endswith('/'):
+                self.tagurl = self.tagurl[:-1]
+        if self.repotype == 'git':
+            self.repourl = getOption(config, sectionName, 'repourl',
+                                    'https://github.com/zopefoundation/%s.git' % self.name)
+            if self.repourl.endswith('/'):
+                self.repourl = self.repourl[:-1]
         self.minVersion = getOption(config, sectionName, 'minVersion')
         self.maxVersion = getOption(config, sectionName, 'maxVersion')
         self.needSource = bool(getOption(config, sectionName, 'needSource', 'True'))
         self.excludeVersions = getOption(
-            config, sectionName, 'excludeVersions' ,'').split()
+            config, sectionName, 'excludeVersions', '').split()
         self.targets = []
         for target in config.get(sectionName, 'targets').split():
             self.targets.append(compilers[target])
@@ -198,7 +199,7 @@ class Package(object):
         verFiles = defaultdict(list)
         simple = self.urlGetterKlass().get(self.pypiurl)
         soup = BeautifulSoup.BeautifulSoup(simple)
-        VERSION = re.compile(self.name+r'-(\d+\.\d+(\.\d+\w*){0,2})')
+        VERSION = re.compile(self.name + r'-(\d+\.\d+(\.\d+\w*){0,2})')
         gotSource = False
 
         for tag in soup('a'):
@@ -220,7 +221,6 @@ class Package(object):
         if self.needSource and not gotSource:
             LOGGER.info("No source release (.zip/.tar.gz/.tgz) found")
 
-        svn = self.svnKlass(exitOnError=False)
         for version in versions:
             #3 check whether we need a build
             needs = []
@@ -236,11 +236,17 @@ class Package(object):
                 tmpfolder = tempfile.mkdtemp('wineggbuilder')
                 try:
                     try:
-                        #3.1 svn co tag
-                        svnurl = "%s/%s" % (self.tagurl, version)
-                        svn.co(svnurl, tmpfolder)
+                        if self.repotype == 'svn':
+                            #3.1 svn co tag
+                            svn = self.svnKlass(exitOnError=False)
+                            svnurl = "%s/%s" % (self.tagurl, version)
+                            svn.co(svnurl, tmpfolder)
+                        if self.repotype == 'git':
+                            git = self.gitKlass(exitOnError=False)
+                            git.clone(self.repourl, tmpfolder)
+                            git.checkout(version)
                     except OSError:
-                        status.setStatus(self, version, "SVN error")
+                        status.setStatus(self, version, "SVN/Git error")
                     else:
                         #3.2 build missing
                         for target in needs:
@@ -250,6 +256,7 @@ class Package(object):
                 finally:
                     #3.3 del temp folder
                     base.rmtree(tmpfolder)
+
 
 class Status(object):
     def __init__(self, packages, targets):
