@@ -17,16 +17,38 @@ __docformat__ = 'ReStructuredText'
 
 import unittest
 from zope.testing import doctest
-#import doctest
 import pprint
+
+
+def doctest_versions():
+    """Check some assumptions on version comparison
+
+    >>> from distutils.version import StrictVersion
+    >>> v4 = StrictVersion('4.0.0')
+    >>> v4a = StrictVersion('4.0.0a1')
+
+    >>> v4 > v4a
+    True
+
+    >>> v4 == v4a
+    False
+
+    >>> v4 < v4a
+    False
+    """
+
 
 def test_suite():
     return unittest.TestSuite((
         doctest.DocFileSuite('test.txt',
-                     optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
-                     globs={'pprint': pprint}
-                     ),
+            optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
+            globs={'pprint': pprint}
+            ),
+        doctest.DocTestSuite(
+            optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS,
+        )
         ))
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')
