@@ -31,6 +31,10 @@ is_win32 = sys.platform == 'win32'
 
 BUILD_SECTION = 'build'
 
+class CommandError(OSError):
+    pass
+
+
 class Command(object):
     def __init__(self, cwd=None, captureOutput=True, exitOnError=True):
         self.cwd = cwd
@@ -53,11 +57,12 @@ class Command(object):
             stderr = "See output above"
         if p.returncode != 0:
             LOGGER.error(u'An error occurred while running command: %s' %cmd)
-            LOGGER.error('Error Output: \n%s' % stderr)
+            LOGGER.error('stdout: \n%s' % stdout)
+            LOGGER.error('stderr: \n%s' % stderr)
             if self.exitOnError:
                 sys.exit(p.returncode)
             else:
-                raise OSError(p.returncode)
+                raise CommandError(p.returncode)
         LOGGER.debug('Output: \n%s' % stdout)
         return stdout
 

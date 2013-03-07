@@ -107,6 +107,10 @@ class Compiler(object):
                 status.setStatus(package, version, "done", self)
         except KeyboardInterrupt:
             raise
+        except base.CommandError:
+            LOGGER.exception("An error occurred while running the build "
+                             "command, see output above")
+            status.setStatus(package, version, "error", self)
         except:
             #prepare for the worst
             LOGGER.exception("An error occurred while running the build command")
