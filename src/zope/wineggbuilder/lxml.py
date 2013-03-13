@@ -19,6 +19,7 @@ import os
 import optparse
 import re
 import sys
+import shutil
 import tarfile
 import tempfile
 import urllib2
@@ -122,15 +123,15 @@ class Build(object):
         LOGGER.info("Building %s", self.compiler.name)
         # let's stick to a non random temp folder
         bdir = addtmp('lxmlbuild')
-        if os.path.exists(bdir):
-            base.rmtree(bdir)
-        os.makedirs(bdir)
+        #if os.path.exists(bdir):
+        #    base.rmtree(bdir)
+        #os.makedirs(bdir)
 
-        ####################
+        #####################
         #url = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
         #    ZLIB, ZLIB)
-        #zlib = 'zlib-%s.tar.bz2' % ZLIB
-        #zlibfolder = os.path.join(bdir, 'zlib')
+        zlib = 'zlib-%s.tar.bz2' % ZLIB
+        zlibfolder = os.path.join(bdir, 'zlib')
         #download(url, zlib)
         #extract(addtmp(zlib), bdir, 'zlib')
         #
@@ -138,21 +139,24 @@ class Build(object):
         #command = self.compiler.setup + '\r\n' + cmd
         #output = do(command, cwd=os.path.join(bdir, 'zlib'))
         #
-        #####################
+        ######################
         #url = 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % ICONV
-        #iconv = 'libiconv-%s.tar.bz2' % ICONV
-        #iconvfolder = os.path.join(bdir, 'libiconv')
+        iconv = 'libiconv-%s.tar.bz2' % ICONV
+        iconvfolder = os.path.join(bdir, 'libiconv')
         #download(url, iconv)
         #extract(addtmp(iconv), bdir, 'libiconv')
         #
         #cmd = r"nmake /a -f Makefile.msvc NO_NLS=1"
         #command = self.compiler.setup + '\r\n' + cmd
         #output = do(command, cwd=os.path.join(bdir, 'libiconv'))
+        #shutil.copy(
+        #    os.path.join(iconvfolder, 'lib', 'iconv.lib'),
+        #    os.path.join(iconvfolder, 'lib', 'iconv_a.lib'))
         #
-        #####################
+        ######################
         #url = 'ftp://xmlsoft.org/libxml2/libxml2-%s.tar.gz' % LIBXML
-        #libxml = 'libxml2-%s.tar.bz2' % LIBXML
-        #libxmlfolder = os.path.join(bdir, 'libxml2')
+        libxml = 'libxml2-%s.tar.bz2' % LIBXML
+        libxmlfolder = os.path.join(bdir, 'libxml2')
         #download(url, libxml)
         #extract(addtmp(libxml), bdir, 'libxml2')
         #
@@ -162,10 +166,10 @@ class Build(object):
         #command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
         #output = do(command, cwd=os.path.join(bdir, 'libxml2', 'win32'))
         #
-        #####################
+        ######################
         #url = 'ftp://xmlsoft.org/libxslt/libxslt-%s.tar.gz' % LIBXSLT
-        #libxslt = 'libxslt-%s.tar.bz2' % LIBXSLT
-        #libxsltfolder = os.path.join(bdir, 'libxslt')
+        libxslt = 'libxslt-%s.tar.bz2' % LIBXSLT
+        libxsltfolder = os.path.join(bdir, 'libxslt')
         #download(url, libxslt)
         #extract(addtmp(libxslt), bdir, 'libxslt')
         #
@@ -181,6 +185,34 @@ class Build(object):
         lxmlfolder = os.path.join(bdir, 'lxml')
         download(url, lxml)
         extract(addtmp(lxml), bdir, 'lxml')
+
+        subst = dict(zlib=zlibfolder, iconv=iconvfolder,
+                   xml=libxmlfolder, xslt=libxsltfolder)
+        newinc = r"""
+STATIC_INCLUDE_DIRS = [
+     r"%(xml)s\include",
+     r"%(xslt)s",
+     r"%(zlib)s",
+     r"%(iconv)s\include"
+     ]"""% subst
+
+        newlib = r"""
+STATIC_LIBRARY_DIRS = [
+     r"%(xml)s\win32\bin.msvc",
+     r"%(xslt)s\win32\bin.msvc",
+     r"%(zlib)s",
+     r"%(iconv)s\lib"
+     ]
+        """ % subst
+
+        setuppy = open(os.path.join(lxmlfolder, 'setup.py'), 'rb').read()
+        setuppy = setuppy.replace("STATIC_INCLUDE_DIRS = []", newinc)
+        setuppy = setuppy.replace("STATIC_LIBRARY_DIRS = []", newlib)
+        open(os.path.join(lxmlfolder, 'setup.py'), 'wb').write(setuppy)
+
+        cmd = "%s setup.py build --static" % self.compiler.python
+        command = self.compiler.setup + '\r\n' + cmd
+        output = do(command, cwd=lxmlfolder)
 
 
 def main(args=None):
