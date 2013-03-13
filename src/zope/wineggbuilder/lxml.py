@@ -36,6 +36,8 @@ TARGETS = """
     py26_32 py26_64
     py27_32 py27_64
     py32_32 py32_64""".split()
+TARGETS = """
+    py26_32""".split()
 
 ZLIB = '1.2.7'
 ICONV = '1.9.1'
@@ -96,73 +98,89 @@ def extract(fname, target, targetname):
 
 
 def do(command, cwd=None):
+    tmpfile = None
     if len(command.splitlines()) > 1:
         #in case there are more lines we got to do .bat file
         tmpfile = tempfile.mktemp(suffix='.bat')
         open(tmpfile, "w").write(command)
         command = tmpfile
 
-    base.Command(cwd=cwd).do(command)
+    output = base.Command(cwd=cwd).do(command)
+
+    #if tmpfile:
+    #    os.remove(tmpfile)
+
+    return output
 
 
 class Build(object):
     def __init__(self, compiler):
         self.compiler = compiler
 
-    def run(self):
+    def run(self, lxmlver):
+        LOGGER.info("-----------------------")
+        LOGGER.info("Building %s", self.compiler.name)
         # let's stick to a non random temp folder
         bdir = addtmp('lxmlbuild')
         if os.path.exists(bdir):
             base.rmtree(bdir)
         os.makedirs(bdir)
 
-        ###################
-        url = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
-            ZLIB, ZLIB)
-        zlib = 'zlib-%s.tar.bz2' % ZLIB
-        zlibfolder = addtmp('zlib')
-        download(url, zlib)
-        extract(addtmp(zlib), bdir, 'zlib')
-
-        cmd = r"nmake -f win32\Makefile.msc"
-        command = self.compiler.setup + '\r\n' + cmd
-        output = do(command, cwd=os.path.join(bdir, 'zlib'))
+        ####################
+        #url = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
+        #    ZLIB, ZLIB)
+        #zlib = 'zlib-%s.tar.bz2' % ZLIB
+        #zlibfolder = os.path.join(bdir, 'zlib')
+        #download(url, zlib)
+        #extract(addtmp(zlib), bdir, 'zlib')
+        #
+        #cmd = r"nmake -f win32\Makefile.msc"
+        #command = self.compiler.setup + '\r\n' + cmd
+        #output = do(command, cwd=os.path.join(bdir, 'zlib'))
+        #
+        #####################
+        #url = 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % ICONV
+        #iconv = 'libiconv-%s.tar.bz2' % ICONV
+        #iconvfolder = os.path.join(bdir, 'libiconv')
+        #download(url, iconv)
+        #extract(addtmp(iconv), bdir, 'libiconv')
+        #
+        #cmd = r"nmake /a -f Makefile.msvc NO_NLS=1"
+        #command = self.compiler.setup + '\r\n' + cmd
+        #output = do(command, cwd=os.path.join(bdir, 'libiconv'))
+        #
+        #####################
+        #url = 'ftp://xmlsoft.org/libxml2/libxml2-%s.tar.gz' % LIBXML
+        #libxml = 'libxml2-%s.tar.bz2' % LIBXML
+        #libxmlfolder = os.path.join(bdir, 'libxml2')
+        #download(url, libxml)
+        #extract(addtmp(libxml), bdir, 'libxml2')
+        #
+        #cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s;%s\include lib=%s;%s\lib" % (
+        #    zlibfolder, iconvfolder, zlibfolder, iconvfolder)
+        #cmd2 = r"nmake all"
+        #command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
+        #output = do(command, cwd=os.path.join(bdir, 'libxml2', 'win32'))
+        #
+        #####################
+        #url = 'ftp://xmlsoft.org/libxslt/libxslt-%s.tar.gz' % LIBXSLT
+        #libxslt = 'libxslt-%s.tar.bz2' % LIBXSLT
+        #libxsltfolder = os.path.join(bdir, 'libxslt')
+        #download(url, libxslt)
+        #extract(addtmp(libxslt), bdir, 'libxslt')
+        #
+        #cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s\include;%s;%s\include lib=%s\win32\bin.msvc;%s;%s\lib" % (
+        #    libxmlfolder, zlibfolder, iconvfolder, libxmlfolder, zlibfolder, iconvfolder)
+        #cmd2 = r"nmake all"
+        #command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
+        #output = do(command, cwd=os.path.join(bdir, 'libxslt', 'win32'))
 
         ####################
-        url = 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % ICONV
-        iconv = 'iconv-%s.tar.bz2' % ICONV
-        iconvfolder = addtmp('iconv')
-        download(url, iconv)
-        extract(addtmp(iconv), bdir, 'iconv')
-
-        cmd = r"nmake /a -f Makefile.msvc NO_NLS=1"
-        command = self.compiler.setup + '\r\n' + cmd
-        output = do(command, cwd=os.path.join(bdir, 'iconv'))
-
-        ####################
-        url = 'ftp://xmlsoft.org/libxml2/libxml2-%s.tar.gz' % LIBXML
-        libxml = 'libxml2-%s.tar.bz2' % LIBXML
-        libxmlfolder = addtmp('libxml')
-        download(url, libxml)
-        extract(addtmp(libxml), bdir, 'libxml')
-
-        cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s;%s\include lib=%s;%s\lib" % (
-            zlibfolder, iconvfolder, zlibfolder, iconvfolder)
-        cmd2 = r"nmake all"
-        command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
-        output = do(command, cwd=os.path.join(bdir, 'libxml', 'win32'))
-
-        ####################
-        url = 'ftp://xsltsoft.org/libxslt2/libxslt2-%s.tar.gz' % LIBXML
-        libxslt = 'libxslt2-%s.tar.bz2' % LIBXSLT
-        download(url, libxslt)
-        extract(addtmp(libxslt), bdir, 'libxslt')
-
-        cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s\include;%s;%s\include lib=%s\win32\bin.msvc;%s;%s\lib" % (
-            libxmlfolder, zlibfolder, iconvfolder, libxmlfolder, zlibfolder, iconvfolder)
-        cmd2 = r"nmake all"
-        command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
-        output = do(command, cwd=os.path.join(bdir, 'libxslt', 'win32'))
+        url = 'https://pypi.python.org/packages/source/l/lxml/lxml-%s.tar.gz' % lxmlver
+        lxml = 'lxml-%s.tar.gz' % lxmlver
+        lxmlfolder = os.path.join(bdir, 'lxml')
+        download(url, lxml)
+        extract(addtmp(lxml), bdir, 'lxml')
 
 
 def main(args=None):
@@ -188,16 +206,17 @@ def main(args=None):
 
     if len(args) == 0:
         print "No configuration was specified."
-        print "Usage: %s [options] config1" % sys.argv[0]
+        print "Usage: %s [options] lxml-version config1" % sys.argv[0]
         sys.exit(0)
 
     # we want the compilers from here
-    builder = build.Builder(args[0], options)
+    lxmlver = args[0]
+    builder = build.Builder(args[1], options)
     compilers = [builder.compilers[name] for name in TARGETS]
 
     for compiler in compilers:
         b = Build(compiler)
-        b.run()
+        b.run(lxmlver)
 
     # Remove the handler again.
     LOGGER.removeHandler(handler)

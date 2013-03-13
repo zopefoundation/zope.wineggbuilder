@@ -48,6 +48,8 @@ class Compiler(object):
 
     def read(self, config):
         self.setup = config.get(self.name, 'setup')
+        self.python = config.get(self.name, 'python')
+        # XXX: add later a %python% expansion
         self.command = config.get(self.name, 'command')
         self.fileEnding = config.get(self.name, 'fileEnding')
 
@@ -84,6 +86,9 @@ class Compiler(object):
             status.setStatus(package, version, "dryrun", self)
 
         command = self.setup + '\r\n' + command
+
+        if '%version%' in command:
+            command = command.replace('%version%', version)
 
         LOGGER.debug('Running: %s\nIn: %s', command, sourceFolder)
 
@@ -157,6 +162,8 @@ class Package(object):
                 'https://pypi.python.org/packages/source/%s/%s' % (self.name[0], self.name))
             if self.repourl.endswith('/'):
                 self.repourl = self.repourl[:-1]
+        if self.repotype == 'cmd':
+            pass
         self.minVersion = getOption(config, sectionName, 'minVersion')
         self.maxVersion = getOption(config, sectionName, 'maxVersion')
         self.needSource = bool(getOption(config, sectionName, 'needSource', 'True'))
@@ -276,6 +283,9 @@ class Package(object):
                             # download source from pypi
                             dl = self.dlKlass()
                             dl.download(self.name, self.repourl, tmpfolder, version)
+                        if self.repotype == 'cmd':
+                            # noop
+                            pass
                     except OSError:
                         status.setStatus(self, version, "SVN/Git error")
                     else:
