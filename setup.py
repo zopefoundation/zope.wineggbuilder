@@ -62,5 +62,6 @@ setup(
     entry_points = """
     [console_scripts]
     build = zope.wineggbuilder.build:main
+    lxml = zope.wineggbuilder.lxml:main
     """,
     )

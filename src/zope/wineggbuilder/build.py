@@ -47,6 +47,7 @@ class Compiler(object):
         self.read(config)
 
     def read(self, config):
+        self.setup = config.get(self.name, 'setup')
         self.command = config.get(self.name, 'command')
         self.fileEnding = config.get(self.name, 'fileEnding')
 
@@ -81,6 +82,8 @@ class Compiler(object):
             LOGGER.info("Dry run, no upload")
             command = command.replace('upload', '')
             status.setStatus(package, version, "dryrun", self)
+
+        command = self.setup + '\r\n' + command
 
         LOGGER.debug('Running: %s\nIn: %s', command, sourceFolder)
 
@@ -127,6 +130,7 @@ class Package(object):
     urlGetterKlass = base.URLGetter
     svnKlass = base.SVN
     gitKlass = base.Git
+    dlKlass = base.Download
 
     def __init__(self, sectionName, config, options, compilers):
         self.sectionName = sectionName
@@ -146,6 +150,11 @@ class Package(object):
         if self.repotype == 'git':
             self.repourl = getOption(config, sectionName, 'repourl',
                                     'https://github.com/zopefoundation/%s.git' % self.name)
+            if self.repourl.endswith('/'):
+                self.repourl = self.repourl[:-1]
+        if self.repotype == 'download':
+            self.repourl = getOption(config, sectionName, 'repourl',
+                'https://pypi.python.org/packages/source/%s/%s' % (self.name[0], self.name))
             if self.repourl.endswith('/'):
                 self.repourl = self.repourl[:-1]
         self.minVersion = getOption(config, sectionName, 'minVersion')
@@ -263,6 +272,10 @@ class Package(object):
                             git = self.gitKlass(exitOnError=False)
                             git.clone(self.repourl, tmpfolder)
                             git.checkout(version)
+                        if self.repotype == 'download':
+                            # download source from pypi
+                            dl = self.dlKlass()
+                            dl.download(self.name, self.repourl, tmpfolder, version)
                     except OSError:
                         status.setStatus(self, version, "SVN/Git error")
                     else:

@@ -85,6 +85,14 @@ class Git(object):
         return self.cmd.do(command)
 
 
+class Download(object):
+    def __init__(self, exitOnError=True):
+        self.cmd = self.commandKlass(exitOnError=exitOnError)
+
+    def download(self, package, repourl, tmpfolder, version):
+        pass
+
+
 class SVN(object):
     user = None
     passwd = None
