@@ -17,17 +17,11 @@ __docformat__ = 'ReStructuredText'
 import logging
 import os
 import optparse
-import re
 import sys
 import shutil
 import tarfile
 import tempfile
 import urllib2
-from collections import defaultdict
-
-import BeautifulSoup
-import ConfigParser
-from distutils.version import StrictVersion
 
 from zope.wineggbuilder import base
 from zope.wineggbuilder import build
@@ -37,32 +31,22 @@ TARGETS = """
     py26_32 py26_64
     py27_32 py27_64
     py32_32 py32_64""".split()
-TARGETS = """
-    py26_32 py26_64""".split()
 
-ZLIB = '1.2.7'
-ICONV = '1.9.1'
-LIBXML = '2.9.0'
-LIBXSLT = '1.1.28'
+ZLIBVER = '1.2.7'
+ZLIBURL = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
+          ZLIBVER, ZLIBVER)
+ICONVVER = '1.9.1'
+ICONVURL = 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % ICONVVER
+LIBXMLVER = '2.9.0'
+LIBXMLURL = 'ftp://xmlsoft.org/libxml2/libxml2-%s.tar.gz' % LIBXMLVER
+LIBXSLTVER = '1.1.28'
+LIBXSLTURL = 'ftp://xmlsoft.org/libxslt/libxslt-%s.tar.gz' % LIBXSLTVER
+LXMLURL = 'https://pypi.python.org/packages/source/l/lxml/lxml-%s.tar.gz'
 
+
+# we want to use a specific temp folder, not a random one
+# that helps with debugging
 TEMP = tempfile.gettempdir()
-
-parser = optparse.OptionParser()
-parser.add_option(
-    "-q", "--quiet", action="store_true",
-    dest="quiet", default=False,
-    help="When specified, no messages are displayed.")
-
-parser.add_option(
-    "-v", "--verbose", action="store_true",
-    dest="verbose", default=False,
-    help="When specified, debug information is displayed.")
-
-parser.add_option(
-    "-d", "--dryrun", action="store_true",
-    dest="dryrun", default=False,
-    help="When specified, no upload is done.")
-
 
 def addtmp(name):
     return os.path.join(TEMP, name)
@@ -117,6 +101,10 @@ def do(command, cwd=None):
     return output
 
 
+class CompileError(Exception):
+    pass
+
+
 class Build(object):
     def __init__(self, compiler):
         self.compiler = compiler
@@ -131,11 +119,9 @@ class Build(object):
         os.makedirs(bdir)
 
         #####################
-        url = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
-            ZLIB, ZLIB)
-        zlib = 'zlib-%s.tar.bz2' % ZLIB
+        zlib = 'zlib-%s.tar.bz2' % ZLIBVER
         zlibfolder = os.path.join(bdir, 'zlib')
-        download(url, zlib)
+        download(ZLIBURL, zlib)
         extract(addtmp(zlib), bdir, 'zlib')
 
         cmd = r"nmake -f win32\Makefile.msc"
@@ -143,10 +129,9 @@ class Build(object):
         output = do(command, cwd=os.path.join(bdir, 'zlib'))
 
         ######################
-        url = 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % ICONV
-        iconv = 'libiconv-%s.tar.bz2' % ICONV
+        iconv = 'libiconv-%s.tar.bz2' % ICONVVER
         iconvfolder = os.path.join(bdir, 'libiconv')
-        download(url, iconv)
+        download(ICONVURL, iconv)
         extract(addtmp(iconv), bdir, 'libiconv')
 
         cmd = r"nmake /a -f Makefile.msvc NO_NLS=1"
@@ -157,10 +142,9 @@ class Build(object):
             os.path.join(iconvfolder, 'lib', 'iconv_a.lib'))
 
         ######################
-        url = 'ftp://xmlsoft.org/libxml2/libxml2-%s.tar.gz' % LIBXML
-        libxml = 'libxml2-%s.tar.bz2' % LIBXML
+        libxml = 'libxml2-%s.tar.bz2' % LIBXMLVER
         libxmlfolder = os.path.join(bdir, 'libxml2')
-        download(url, libxml)
+        download(LIBXMLURL, libxml)
         extract(addtmp(libxml), bdir, 'libxml2')
 
         cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s;%s\include lib=%s;%s\lib" % (
@@ -170,10 +154,9 @@ class Build(object):
         output = do(command, cwd=os.path.join(bdir, 'libxml2', 'win32'))
 
         ######################
-        url = 'ftp://xmlsoft.org/libxslt/libxslt-%s.tar.gz' % LIBXSLT
-        libxslt = 'libxslt-%s.tar.bz2' % LIBXSLT
+        libxslt = 'libxslt-%s.tar.bz2' % LIBXSLTVER
         libxsltfolder = os.path.join(bdir, 'libxslt')
-        download(url, libxslt)
+        download(LIBXSLTURL, libxslt)
         extract(addtmp(libxslt), bdir, 'libxslt')
 
         cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s\include;%s;%s\include lib=%s\win32\bin.msvc;%s;%s\lib" % (
@@ -183,21 +166,23 @@ class Build(object):
         output = do(command, cwd=os.path.join(bdir, 'libxslt', 'win32'))
 
         ####################
-        url = 'https://pypi.python.org/packages/source/l/lxml/lxml-%s.tar.gz' % lxmlver
+        url = LXMLURL % lxmlver
         lxml = 'lxml-%s.tar.gz' % lxmlver
         lxmlfolder = os.path.join(bdir, 'lxml')
         download(url, lxml)
         extract(addtmp(lxml), bdir, 'lxml')
 
+        # patch the include/lib folders for a static build
         subst = dict(zlib=zlibfolder, iconv=iconvfolder,
-                   xml=libxmlfolder, xslt=libxsltfolder)
+                     xml=libxmlfolder, xslt=libxsltfolder)
+
         newinc = r"""
 STATIC_INCLUDE_DIRS = [
      r"%(xml)s\include",
      r"%(xslt)s",
      r"%(zlib)s",
      r"%(iconv)s\include"
-     ]"""% subst
+     ]""" % subst
 
         newlib = r"""
 STATIC_LIBRARY_DIRS = [
@@ -213,10 +198,12 @@ STATIC_LIBRARY_DIRS = [
         setuppy = setuppy.replace("STATIC_LIBRARY_DIRS = []", newlib)
         open(os.path.join(lxmlfolder, 'setup.py'), 'wb').write(setuppy)
 
+        # build the pyds
         cmd = "%s setup.py build --static" % self.compiler.python
         command = self.compiler.setup + '\r\n' + cmd
         output = do(command, cwd=lxmlfolder)
 
+        # copy testing stuff to the build
         buildlibdir = None
         for fn in os.listdir(os.path.join(lxmlfolder, 'build')):
             if fn.startswith('lib.win'):
@@ -238,33 +225,72 @@ STATIC_LIBRARY_DIRS = [
         command = "%s selftest.py" % self.compiler.python
         output = do(command, cwd=buildlibdir)
         LOGGER.info("selftest.py output: %s", output)
+        output = output.lower()
+        if 'failure' in output or 'error' in output:
+            # an exitcode != 0 will bail out, but to be sure we'll check the output
+            raise CompileError()
+
         command = "%s selftest2.py" % self.compiler.python
         output = do(command, cwd=buildlibdir)
         LOGGER.info("selftest2.py output: %s", output)
+        output = output.lower()
+        if 'failure' in output or 'error' in output:
+            # an exitcode != 0 will bail out, but to be sure we'll check the output
+            raise CompileError()
 
+        # clean slate before making the binary
+        base.rmtree(os.path.join(lxmlfolder, 'build'))
+
+        # now let's build the binary
         if self.compiler.options.dryrun:
             cmd = "%s setup.py --static bdist_wininst" % self.compiler.python
         else:
+            # upload to pypi if it's not a dry run
             cmd = "%s setup.py --static bdist_wininst upload" % self.compiler.python
         command = self.compiler.setup + '\r\n' + cmd
         output = do(command, cwd=lxmlfolder)
 
+        # build.py Compiler.build needs this output
+        LOGGER.info(output)
 
-def main(args=None):
+        # and leave stuff around for now
+        #base.rmtree(bdir)
+
+
+def getOptions(args):
     # Make sure we get the arguments.
     if args is None:
         args = sys.argv[1:]
     if not args:
         args = ['-h']
 
+    # Parse arguments
+    parser = optparse.OptionParser()
+    parser.add_option(
+        "-q", "--quiet", action="store_true",
+        dest="quiet", default=False,
+        help="When specified, no messages are displayed.")
+
+    parser.add_option(
+        "-v", "--verbose", action="store_true",
+        dest="verbose", default=False,
+        help="When specified, debug information is displayed.")
+
+    parser.add_option(
+        "-d", "--dryrun", action="store_true",
+        dest="dryrun", default=False,
+        help="When specified, no upload is done.")
+
+    return parser.parse_args(args)
+
+
+def main(args=None):
+    options, args = getOptions(args)
+
     # Set up logger handler
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(base.formatter)
     LOGGER.addHandler(handler)
-
-    # Parse arguments
-    options, args = parser.parse_args(args)
-
     LOGGER.setLevel(logging.INFO)
     if options.verbose:
         LOGGER.setLevel(logging.DEBUG)
@@ -274,19 +300,28 @@ def main(args=None):
     if len(args) == 0:
         print "No configuration was specified."
         print "Usage: %s [options] lxml-version config1" % sys.argv[0]
-        sys.exit(0)
+        sys.exit(1)
 
-    # we want the compilers from here
     lxmlver = args[0]
+
+    # we want the compilers specification from here
     builder = build.Builder(args[1], options)
     compilers = [builder.compilers[name] for name in TARGETS]
 
+    exitcode = 0
     for compiler in compilers:
         b = Build(compiler)
-        b.run(lxmlver)
+        try:
+            b.run(lxmlver)
+        except KeyboardInterrupt:
+            break
+        except Exception:
+            # meeh bare except, quite a lot of crap can happen
+            LOGGER.exception("An error occurred while building")
+            exitcode = 1
 
     # Remove the handler again.
     LOGGER.removeHandler(handler)
 
     # Exit cleanly.
-    #sys.exit(0)
+    sys.exit(exitcode)

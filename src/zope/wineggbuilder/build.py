@@ -162,7 +162,8 @@ class Package(object):
                 'https://pypi.python.org/packages/source/%s/%s' % (self.name[0], self.name))
             if self.repourl.endswith('/'):
                 self.repourl = self.repourl[:-1]
-        if self.repotype == 'cmd':
+        if self.repotype == 'none':
+            # the build/compile command will take care of it all (like lxml)
             pass
         self.minVersion = getOption(config, sectionName, 'minVersion')
         self.maxVersion = getOption(config, sectionName, 'maxVersion')
@@ -283,7 +284,7 @@ class Package(object):
                             # download source from pypi
                             dl = self.dlKlass()
                             dl.download(self.name, self.repourl, tmpfolder, version)
-                        if self.repotype == 'cmd':
+                        if self.repotype == 'none':
                             # noop
                             pass
                     except OSError:
