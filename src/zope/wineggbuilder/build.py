@@ -47,9 +47,8 @@ class Compiler(object):
         self.read(config)
 
     def read(self, config):
-        self.setup = config.get(self.name, 'setup')
-        self.python = config.get(self.name, 'python')
-        # XXX: add later a %python% expansion
+        self.setup = getOption(config, self.name, 'setup')
+        self.python = getOption(config, self.name, 'python')
         self.command = config.get(self.name, 'command')
         self.fileEnding = config.get(self.name, 'fileEnding')
 
@@ -66,17 +65,16 @@ class Compiler(object):
 
         if needBuild:
             LOGGER.debug('Build required for [%s] %s %s %s',
-                     package.sectionName, package.name, version, self.name)
+                         package.sectionName, package.name, version, self.name)
         else:
             LOGGER.debug('Build not required for [%s] %s %s %s',
-                     package.sectionName, package.name, version, self.name)
+                         package.sectionName, package.name, version, self.name)
         return needBuild
 
     def build(self, package, version, files, sourceFolder, status):
         LOGGER.info('Starting build for [%s] %s %s %s',
                     package.sectionName, package.name, version, self.name)
         #we really need to build
-        #we have the source in sourceFolder
         cmd = self.commandKlass(cwd=sourceFolder, exitOnError=False)
         command = self.command
 
@@ -85,10 +83,15 @@ class Compiler(object):
             command = command.replace('upload', '')
             status.setStatus(package, version, "dryrun", self)
 
-        command = self.setup + '\r\n' + command
+        if self.setup:
+            command = self.setup + '\r\n' + command
 
-        if '%version%' in command:
-            command = command.replace('%version%', version)
+        idata = dict(version=version,
+                     package=package,
+                     sourceFolder=sourceFolder,
+                     curdir=os.getcwd(),
+                     python=self.python)
+        command = command % idata
 
         LOGGER.debug('Running: %s\nIn: %s', command, sourceFolder)
 

@@ -27,10 +27,6 @@ from zope.wineggbuilder import base
 from zope.wineggbuilder import build
 
 LOGGER = base.LOGGER
-TARGETS = """
-    py26_32 py26_64
-    py27_32 py27_64
-    py32_32 py32_64""".split()
 
 ZLIBVER = '1.2.7'
 ZLIBURL = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
@@ -299,26 +295,24 @@ def main(args=None):
 
     if len(args) == 0:
         print "No configuration was specified."
-        print "Usage: %s [options] lxml-version config1" % sys.argv[0]
+        print "Usage: %s [options] config-ini lxml-version lxml-target" % sys.argv[0]
         sys.exit(1)
 
-    lxmlver = args[0]
+    # we want the compilers specification from (args[0])
+    builder = build.Builder(args[0], options)
 
-    # we want the compilers specification from here
-    builder = build.Builder(args[1], options)
-    compilers = [builder.compilers[name] for name in TARGETS]
+    lxmlver = args[1]
+    target = args[2]
 
     exitcode = 0
-    for compiler in compilers:
-        b = Build(compiler)
-        try:
-            b.run(lxmlver)
-        except KeyboardInterrupt:
-            break
-        except Exception:
-            # meeh bare except, quite a lot of crap can happen
-            LOGGER.exception("An error occurred while building")
-            exitcode = 1
+    compiler = builder.compilers[target]
+    b = Build(compiler)
+    try:
+        b.run(lxmlver)
+    except Exception:
+        # meeh bare except, quite a lot of crap can happen
+        LOGGER.exception("An error occurred while building")
+        exitcode = 1
 
     # Remove the handler again.
     LOGGER.removeHandler(handler)
