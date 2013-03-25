@@ -123,6 +123,7 @@ class Build(object):
         cmd = r"nmake -f win32\Makefile.msc"
         command = self.compiler.setup + '\r\n' + cmd
         output = do(command, cwd=os.path.join(bdir, 'zlib'))
+        LOGGER.info('ZLIB build done')
 
         ######################
         iconv = 'libiconv-%s.tar.bz2' % ICONVVER
@@ -136,6 +137,7 @@ class Build(object):
         shutil.copy(
             os.path.join(iconvfolder, 'lib', 'iconv.lib'),
             os.path.join(iconvfolder, 'lib', 'iconv_a.lib'))
+        LOGGER.info('ICONV build done')
 
         ######################
         libxml = 'libxml2-%s.tar.bz2' % LIBXMLVER
@@ -148,6 +150,7 @@ class Build(object):
         cmd2 = r"nmake all"
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
         output = do(command, cwd=os.path.join(bdir, 'libxml2', 'win32'))
+        LOGGER.info('LIBXML build done')
 
         ######################
         libxslt = 'libxslt-%s.tar.bz2' % LIBXSLTVER
@@ -160,6 +163,7 @@ class Build(object):
         cmd2 = r"nmake all"
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
         output = do(command, cwd=os.path.join(bdir, 'libxslt', 'win32'))
+        LOGGER.info('LIBXSLT build done')
 
         ####################
         url = LXMLURL % lxmlver
@@ -194,48 +198,49 @@ STATIC_LIBRARY_DIRS = [
         setuppy = setuppy.replace("STATIC_LIBRARY_DIRS = []", newlib)
         open(os.path.join(lxmlfolder, 'setup.py'), 'wb').write(setuppy)
 
-        # build the pyds
-        cmd = "%s setup.py build --static" % self.compiler.python
-        command = self.compiler.setup + '\r\n' + cmd
-        output = do(command, cwd=lxmlfolder)
+        if not self.compiler.options.notest:
+            # build the pyds
+            cmd = "%s setup.py build --static" % self.compiler.python
+            command = self.compiler.setup + '\r\n' + cmd
+            output = do(command, cwd=lxmlfolder)
 
-        # copy testing stuff to the build
-        buildlibdir = None
-        for fn in os.listdir(os.path.join(lxmlfolder, 'build')):
-            if fn.startswith('lib.win'):
-                buildlibdir = os.path.join(lxmlfolder, 'build', fn)
-                break
+            # copy testing stuff to the build
+            buildlibdir = None
+            for fn in os.listdir(os.path.join(lxmlfolder, 'build')):
+                if fn.startswith('lib.win'):
+                    buildlibdir = os.path.join(lxmlfolder, 'build', fn)
+                    break
 
-        shutil.copy(
-            os.path.join(lxmlfolder, 'selftest.py'),
-            os.path.join(buildlibdir, 'selftest.py'))
+            shutil.copy(
+                os.path.join(lxmlfolder, 'selftest.py'),
+                os.path.join(buildlibdir, 'selftest.py'))
 
-        shutil.copy(
-            os.path.join(lxmlfolder, 'selftest2.py'),
-            os.path.join(buildlibdir, 'selftest2.py'))
+            shutil.copy(
+                os.path.join(lxmlfolder, 'selftest2.py'),
+                os.path.join(buildlibdir, 'selftest2.py'))
 
-        shutil.copytree(
-            os.path.join(lxmlfolder, 'samples'),
-            os.path.join(buildlibdir, 'samples'))
+            shutil.copytree(
+                os.path.join(lxmlfolder, 'samples'),
+                os.path.join(buildlibdir, 'samples'))
 
-        command = "%s selftest.py" % self.compiler.python
-        output = do(command, cwd=buildlibdir)
-        LOGGER.info("selftest.py output: %s", output)
-        output = output.lower()
-        if 'failure' in output or 'error' in output:
-            # an exitcode != 0 will bail out, but to be sure we'll check the output
-            raise CompileError()
+            command = "%s selftest.py" % self.compiler.python
+            output = do(command, cwd=buildlibdir)
+            LOGGER.info("selftest.py output: %s", output)
+            output = output.lower()
+            if 'failure' in output or 'error' in output:
+                # an exitcode != 0 will bail out, but to be sure we'll check the output
+                raise CompileError()
 
-        command = "%s selftest2.py" % self.compiler.python
-        output = do(command, cwd=buildlibdir)
-        LOGGER.info("selftest2.py output: %s", output)
-        output = output.lower()
-        if 'failure' in output or 'error' in output:
-            # an exitcode != 0 will bail out, but to be sure we'll check the output
-            raise CompileError()
+            command = "%s selftest2.py" % self.compiler.python
+            output = do(command, cwd=buildlibdir)
+            LOGGER.info("selftest2.py output: %s", output)
+            output = output.lower()
+            if 'failure' in output or 'error' in output:
+                # an exitcode != 0 will bail out, but to be sure we'll check the output
+                raise CompileError()
 
-        # clean slate before making the binary
-        base.rmtree(os.path.join(lxmlfolder, 'build'))
+            # clean slate before making the binary
+            base.rmtree(os.path.join(lxmlfolder, 'build'))
 
         # now let's build the binary
         if self.compiler.options.dryrun:
@@ -276,6 +281,11 @@ def getOptions(args):
         "-d", "--dryrun", action="store_true",
         dest="dryrun", default=False,
         help="When specified, no upload is done.")
+
+    parser.add_option(
+        "-n", "--notest", action="store_true",
+        dest="notest", default=False,
+        help="When specified, tests are ignored.")
 
     return parser.parse_args(args)
 
