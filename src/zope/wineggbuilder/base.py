@@ -64,6 +64,10 @@ class Command(object):
             else:
                 raise CommandError(p.returncode)
         LOGGER.debug('Output: \n%s' % stdout)
+        if stderr:
+            # gaaah some commands don't exit with an exitcode != 0
+            # but still produce error messages (and fail)
+            stdout = stdout + '\n' + stderr
         return stdout
 
 
