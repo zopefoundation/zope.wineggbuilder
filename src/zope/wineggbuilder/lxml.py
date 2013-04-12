@@ -212,6 +212,7 @@ STATIC_LIBRARY_DIRS = [
             # build the pyds
             cmd = "%s setup.py build --static" % self.compiler.python
             command = self.compiler.setup + '\r\n' + cmd
+            command = command % idata
             output = do(command, cwd=lxmlfolder)
 
             # copy testing stuff to the build
@@ -259,6 +260,7 @@ STATIC_LIBRARY_DIRS = [
             # upload to pypi if it's not a dry run
             cmd = "%s setup.py --static bdist_wininst upload" % self.compiler.python
         command = self.compiler.setup + '\r\n' + cmd
+        command = command % idata
         output = do(command, cwd=lxmlfolder)
 
         # build.py Compiler.build needs this output
