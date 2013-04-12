@@ -114,6 +114,12 @@ class Build(object):
             base.rmtree(bdir)
         os.makedirs(bdir)
 
+        idata = dict(version=lxmlver,
+                     package='lxml',
+                     #sourceFolder=sourceFolder,
+                     curdir=os.getcwd(),
+                     python=self.compiler.python)
+
         #####################
         zlib = 'zlib-%s.tar.bz2' % ZLIBVER
         zlibfolder = os.path.join(bdir, 'zlib')
@@ -122,6 +128,7 @@ class Build(object):
 
         cmd = r"nmake -f win32\Makefile.msc"
         command = self.compiler.setup + '\r\n' + cmd
+        command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'zlib'))
         LOGGER.info('ZLIB build done')
 
@@ -133,6 +140,7 @@ class Build(object):
 
         cmd = r"nmake /a -f Makefile.msvc NO_NLS=1"
         command = self.compiler.setup + '\r\n' + cmd
+        command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'libiconv'))
         shutil.copy(
             os.path.join(iconvfolder, 'lib', 'iconv.lib'),
@@ -149,6 +157,7 @@ class Build(object):
             zlibfolder, iconvfolder, zlibfolder, iconvfolder)
         cmd2 = r"nmake all"
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
+        command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'libxml2', 'win32'))
         LOGGER.info('LIBXML build done')
 
@@ -162,6 +171,7 @@ class Build(object):
             libxmlfolder, zlibfolder, iconvfolder, libxmlfolder, zlibfolder, iconvfolder)
         cmd2 = r"nmake all"
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
+        command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'libxslt', 'win32'))
         LOGGER.info('LIBXSLT build done')
 
