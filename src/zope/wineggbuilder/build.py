@@ -148,16 +148,16 @@ class Package(object):
     def read(self, sectionName, config, compilers):
         self.name = config.get(sectionName, 'package')
         self.pypiurl = getOption(config, sectionName, 'pypiurl',
-                                 'http://pypi.python.org/simple/%s/' % self.name)
+            'https://pypi.python.org/simple/%s/' % self.name)
         self.repotype = getOption(config, sectionName, 'repotype', 'svn')
         if self.repotype == 'svn':
             self.tagurl = getOption(config, sectionName, 'tagurl',
-                                    'svn://svn.zope.org/repos/main/%s/tags' % self.name)
+                'svn://svn.zope.org/repos/main/%s/tags' % self.name)
             if self.tagurl.endswith('/'):
                 self.tagurl = self.tagurl[:-1]
         if self.repotype == 'git':
             self.repourl = getOption(config, sectionName, 'repourl',
-                                    'https://github.com/zopefoundation/%s.git' % self.name)
+                'https://github.com/zopefoundation/%s.git' % self.name)
             if self.repourl.endswith('/'):
                 self.repourl = self.repourl[:-1]
         if self.repotype == 'download':

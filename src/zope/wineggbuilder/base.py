@@ -153,7 +153,7 @@ class SVN(object):
 
 class PYPI(object):
     def __init__(self):
-        self.proxy = xmlrpclib.ServerProxy('http://pypi.python.org/pypi')
+        self.proxy = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
 
     def list_packages(self):
         pass
