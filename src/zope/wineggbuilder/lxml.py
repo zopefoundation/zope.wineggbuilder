@@ -12,6 +12,8 @@
 #
 ##############################################################################
 """Building lxml... this is a complicated story
+
+See http://lxml.de/build.html#static-linking-on-windows
 """
 __docformat__ = 'ReStructuredText'
 import logging
