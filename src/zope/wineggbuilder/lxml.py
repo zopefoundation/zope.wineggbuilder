@@ -132,7 +132,7 @@ class Build(object):
         command = self.compiler.setup + '\r\n' + cmd
         command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'zlib'))
-        LOGGER.info('ZLIB build done')
+        LOGGER.info('ZLIB build done, output: \n%s', output)
 
         ######################
         iconv = 'libiconv-%s.tar.bz2' % ICONVVER
@@ -147,7 +147,7 @@ class Build(object):
         shutil.copy(
             os.path.join(iconvfolder, 'lib', 'iconv.lib'),
             os.path.join(iconvfolder, 'lib', 'iconv_a.lib'))
-        LOGGER.info('ICONV build done')
+        LOGGER.info('ICONV build done, output: \n%s', output)
 
         ######################
         libxml = 'libxml2-%s.tar.bz2' % LIBXMLVER
@@ -161,7 +161,7 @@ class Build(object):
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
         command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'libxml2', 'win32'))
-        LOGGER.info('LIBXML build done')
+        LOGGER.info('LIBXML build done, output: \n%s', output)
 
         ######################
         libxslt = 'libxslt-%s.tar.bz2' % LIBXSLTVER
@@ -175,7 +175,7 @@ class Build(object):
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
         command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'libxslt', 'win32'))
-        LOGGER.info('LIBXSLT build done')
+        LOGGER.info('LIBXSLT build done, output: \n%s', output)
 
         ####################
         url = LXMLURL % lxmlver
