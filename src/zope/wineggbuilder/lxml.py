@@ -29,6 +29,7 @@ from zope.wineggbuilder import base
 from zope.wineggbuilder import build
 
 LOGGER = base.LOGGER
+LOGOUTPUT = False
 
 ZLIBVER = '1.2.7'
 ZLIBURL = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
@@ -132,6 +133,8 @@ class Build(object):
         command = self.compiler.setup + '\r\n' + cmd
         command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'zlib'))
+        if not LOGOUTPUT:
+            output = 'suppressed'
         LOGGER.info('ZLIB build done, output: \n%s', output)
 
         ######################
@@ -147,6 +150,8 @@ class Build(object):
         shutil.copy(
             os.path.join(iconvfolder, 'lib', 'iconv.lib'),
             os.path.join(iconvfolder, 'lib', 'iconv_a.lib'))
+        if not LOGOUTPUT:
+            output = 'suppressed'
         LOGGER.info('ICONV build done, output: \n%s', output)
 
         ######################
@@ -161,6 +166,8 @@ class Build(object):
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
         command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'libxml2', 'win32'))
+        if not LOGOUTPUT:
+            output = 'suppressed'
         LOGGER.info('LIBXML build done, output: \n%s', output)
 
         ######################
@@ -175,6 +182,8 @@ class Build(object):
         command = self.compiler.setup + '\r\n' + cmd1 + '\r\n' + cmd2
         command = command % idata
         output = do(command, cwd=os.path.join(bdir, 'libxslt', 'win32'))
+        if not LOGOUTPUT:
+            output = 'suppressed'
         LOGGER.info('LIBXSLT build done, output: \n%s', output)
 
         ####################
