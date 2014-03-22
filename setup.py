@@ -18,50 +18,54 @@ $Id: setup.py 113077 2010-06-03 19:35:19Z adamg $
 import os
 from setuptools import setup, find_packages
 
+
 def read(*rnames):
-    return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
+    with open(os.path.join(os.path.dirname(__file__), *rnames)) as f:
+        return f.read()
+
 
 setup(
     name='zope.wineggbuilder',
     version='0.1.0dev',
-    author = "Adam Groszer and the Zope Community",
-    author_email = "zope-dev@zope.org",
+    author="Adam Groszer and the Zope Community",
+    author_email="zope-dev@zope.org",
     description='An Automated Egg build System',
     long_description=(
         read('README.txt')
         + '\n\n' +
-        read('src','zope','wineggbuilder','index.txt')
+        read('src', 'zope', 'wineggbuilder', 'index.txt')
         + '\n\n' +
         read('CHANGES.txt')
-        ),
-    license = "ZPL 2.1",
-    keywords = "ztk binary egg build",
-    classifiers = [
+    ),
+    license="ZPL 2.1",
+    keywords="ztk binary egg build",
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Zope Public License',
         'Programming Language :: Python',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Framework :: Buildout'],
-    url = 'http://pypi.python.org/pypi/zope.wineggbuilder',
-    packages = find_packages('src'),
-    include_package_data = True,
-    package_dir = {'': 'src'},
-    namespace_packages = ['zope'],
-    extras_require = dict(
-      test = [
-          'zope.testing',
-          ],
+        'Framework :: Buildout',
+    ],
+    url='http://pypi.python.org/pypi/zope.wineggbuilder',
+    packages=find_packages('src'),
+    include_package_data=True,
+    package_dir={'': 'src'},
+    namespace_packages=['zope'],
+    extras_require=dict(
+        test=[
+            'zope.testing',
+        ],
     ),
     install_requires=[
         'BeautifulSoup',
         'setuptools',
-        ],
-    zip_safe = False,
-    entry_points = """
-    [console_scripts]
-    build = zope.wineggbuilder.build:main
-    lxml = zope.wineggbuilder.lxml:main
+    ],
+    zip_safe=False,
+    entry_points="""
+        [console_scripts]
+        build = zope.wineggbuilder.build:main
+        lxml = zope.wineggbuilder.lxml:main
     """,
-    )
+)
