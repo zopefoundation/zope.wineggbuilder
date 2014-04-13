@@ -12,9 +12,9 @@
 #
 ##############################################################################
 """Package setup.
-
-$Id: setup.py 113077 2010-06-03 19:35:19Z adamg $
 """
+from __future__ import with_statement
+
 import os
 from setuptools import setup, find_packages
 
