@@ -84,13 +84,14 @@ def extract(fname, target, targetname):
 
 def do(command, cwd=None):
     tmpfile = None
+    LOGGER.debug('%s in %s', command, cwd)
     if len(command.splitlines()) > 1:
         #in case there are more lines we got to do .bat file
         tmpfile = tempfile.mktemp(suffix='.bat')
         open(tmpfile, "w").write(command)
         command = tmpfile
+        LOGGER.debug('running as %s', command)
 
-    LOGGER.debug('%s in %s', command, cwd)
     try:
         output = base.Command(cwd=cwd).do(command)
     finally:
