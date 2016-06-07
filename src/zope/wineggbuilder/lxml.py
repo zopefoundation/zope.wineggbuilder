@@ -36,7 +36,7 @@ ZLIBURL = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/
           ZLIBVER, ZLIBVER)
 ICONVVER = '1.9.1'
 ICONVURL = 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % ICONVVER
-LIBXMLVER = '2.9.4'
+LIBXMLVER = '2.9.3'
 LIBXMLURL = 'ftp://xmlsoft.org/libxml2/libxml2-%s.tar.gz' % LIBXMLVER
 LIBXSLTVER = '1.1.29'
 LIBXSLTURL = 'ftp://xmlsoft.org/libxslt/libxslt-%s.tar.gz' % LIBXSLTVER
