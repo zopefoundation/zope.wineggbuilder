@@ -15,10 +15,10 @@
 
 See http://lxml.de/build.html#static-linking-on-windows
 """
-__docformat__ = 'ReStructuredText'
 import logging
 import os
 import optparse
+import requests
 import sys
 import shutil
 import tarfile
@@ -30,6 +30,8 @@ from zope.wineggbuilder import build
 
 LOGGER = base.LOGGER
 LOGOUTPUT = False
+
+PYPI_JSON_URL = "https://pypi.python.org/pypi/{}/json"
 
 ZLIBVER = '1.2.7'
 ZLIBURL = 'http://sourceforge.net/projects/libpng/files/zlib/%s/zlib-%s.tar.bz2/download' % (
@@ -46,6 +48,7 @@ LXMLURL = 'https://pypi.python.org/packages/source/l/lxml/lxml-%s.tar.gz'
 # we want to use a specific temp folder, not a random one
 # that helps with debugging
 TEMP = tempfile.gettempdir()
+
 
 def addtmp(name):
     return os.path.join(TEMP, name)
@@ -99,6 +102,51 @@ def do(command, cwd=None):
             os.remove(tmpfile)
 
     return output
+
+
+def project_file(project, filename):
+    # taken from https://github.com/dstufft/pypi-debian
+    # Get the data from PyPI
+    try:
+        resp = requests.get(PYPI_JSON_URL.format(project))
+        resp.raise_for_status()
+    except requests.HTTPError as exc:
+        if exc.response.status_code == 404:
+            raise ValueError("Could not find project '{}'".format(project))
+    data = resp.json()
+
+    # Determine if we're looking for a signature file and if we are correct
+    # the filename to the non signature filename.
+    if filename.endswith(".asc"):
+        sig = True
+        filename = filename[:-4]
+    else:
+        sig = False
+
+    # Find out the URL on PyPI that points to this filename.
+    for version, files in data["releases"].items():
+        for file_ in files:
+            if file_["filename"] == filename:
+                # If we're looking for a signature, and this file has a
+                # signature then we'll redirect to this URL.
+                if sig and file_["has_sig"]:
+                    return file_["url"] + ".asc"
+                # If we're looking for a signature, and this file does not have
+                # a signature then continue on looking for more files.
+                elif sig:
+                    continue
+                # If we're not looking for a signature then redirect to this
+                # URL.
+                else:
+                    return file_["url"]
+
+    # If we've gotten to this point, then we were unable to find a filename
+    # that matches the given filename for this project.
+    raise ValueError(
+        "Could not find filename '{}' for project '{}'".format(
+            filename, project,
+        )
+    )
 
 
 class CompileError(Exception):
@@ -188,8 +236,8 @@ class Build(object):
         LOGGER.info('LIBXSLT build done, output: \n%s', output)
 
         ####################
-        url = LXMLURL % lxmlver
         lxml = 'lxml-%s.tar.gz' % lxmlver
+        url = project_file('lxml', lxml)
         lxmlfolder = os.path.join(bdir, 'lxml')
         download(url, lxml)
         extract(addtmp(lxml), bdir, 'lxml')

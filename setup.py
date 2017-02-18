@@ -60,6 +60,7 @@ setup(
     ),
     install_requires=[
         'BeautifulSoup',
+        'requests',
         'setuptools',
     ],
     zip_safe=False,
