@@ -49,6 +49,8 @@ LXMLURL = 'https://pypi.python.org/packages/source/l/lxml/lxml-%s.tar.gz'
 # that helps with debugging
 TEMP = tempfile.gettempdir()
 
+DOWNLOADS = None
+
 
 def addtmp(name):
     return os.path.join(TEMP, name)
@@ -56,10 +58,17 @@ def addtmp(name):
 
 def download(url, fname):
     target = addtmp(fname)
-    # we'll cache in temp
+    if DOWNLOADS:
+        # we'll cache
+        cached = os.path.join(DOWNLOADS, fname)
+        if os.path.exists(cached):
+            LOGGER.info("%s found in %s", fname, DOWNLOADS)
+            shutil.copy(cached, target)
+            return target
+
     if os.path.exists(target):
         LOGGER.info("%s already downloaded", fname)
-        return True
+        return target
 
     LOGGER.info("Downloading %s", url)
     remote = urllib2.urlopen(url)
@@ -67,9 +76,13 @@ def download(url, fname):
     localFile.write(remote.read())
     localFile.close()
 
+    if DOWNLOADS:
+        cached = os.path.join(DOWNLOADS, fname)
+        shutil.copy(target, cached)
+
     LOGGER.info("Downloaded %s", fname)
 
-    return True
+    return target
 
 
 def extract(fname, target, targetname):
@@ -175,8 +188,7 @@ class Build(object):
         #####################
         zlib = 'zlib-%s.tar.bz2' % ZLIBVER
         zlibfolder = os.path.join(bdir, 'zlib')
-        download(ZLIBURL, zlib)
-        extract(addtmp(zlib), bdir, 'zlib')
+        extract(download(ZLIBURL, zlib), bdir, 'zlib')
 
         cmd = r"nmake -f win32\Makefile.msc"
         command = self.compiler.setup + '\r\n' + cmd
@@ -189,8 +201,7 @@ class Build(object):
         ######################
         iconv = 'libiconv-%s.tar.bz2' % ICONVVER
         iconvfolder = os.path.join(bdir, 'libiconv')
-        download(ICONVURL, iconv)
-        extract(addtmp(iconv), bdir, 'libiconv')
+        extract(download(ICONVURL, iconv), bdir, 'libiconv')
 
         cmd = r"nmake /a -f Makefile.msvc NO_NLS=1"
         command = self.compiler.setup + '\r\n' + cmd
@@ -206,8 +217,7 @@ class Build(object):
         ######################
         libxml = 'libxml2-%s.tar.bz2' % LIBXMLVER
         libxmlfolder = os.path.join(bdir, 'libxml2')
-        download(LIBXMLURL, libxml)
-        extract(addtmp(libxml), bdir, 'libxml2')
+        extract(download(LIBXMLURL, libxml), bdir, 'libxml2')
 
         cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s;%s\include lib=%s;%s\lib" % (
             zlibfolder, iconvfolder, zlibfolder, iconvfolder)
@@ -222,8 +232,7 @@ class Build(object):
         ######################
         libxslt = 'libxslt-%s.tar.bz2' % LIBXSLTVER
         libxsltfolder = os.path.join(bdir, 'libxslt')
-        download(LIBXSLTURL, libxslt)
-        extract(addtmp(libxslt), bdir, 'libxslt')
+        extract(download(LIBXSLTURL, libxslt), bdir, 'libxslt')
 
         cmd1 = r"cscript configure.js compiler=msvc iconv=yes zlib=yes include=%s\include;%s;%s\include lib=%s\win32\bin.msvc;%s;%s\lib" % (
             libxmlfolder, zlibfolder, iconvfolder, libxmlfolder, zlibfolder, iconvfolder)
@@ -239,8 +248,7 @@ class Build(object):
         lxml = 'lxml-%s.tar.gz' % lxmlver
         url = project_file('lxml', lxml)
         lxmlfolder = os.path.join(bdir, 'lxml')
-        download(url, lxml)
-        extract(addtmp(lxml), bdir, 'lxml')
+        extract(download(url, lxml), bdir, 'lxml')
 
         # patch the include/lib folders for a static build
         subst = dict(zlib=zlibfolder, iconv=iconvfolder,
@@ -359,6 +367,10 @@ def getOptions(args):
         dest="notest", default=False,
         help="When specified, tests are ignored.")
 
+    parser.add_option(
+        "--downloads", action="store", type="string", dest="downloads",
+        help="Specify a folder for download cache.")
+
     return parser.parse_args(args)
 
 
@@ -380,6 +392,10 @@ def main(args=None):
         print "Usage: %s [options] config-ini lxml-version lxml-target" % sys.argv[0]
         sys.exit(1)
 
+    if options.downloads:
+        global DOWNLOADS
+        DOWNLOADS = options.downloads
+    
     # we want the compilers specification from (args[0])
     builder = build.Builder(args[0], options)
 
