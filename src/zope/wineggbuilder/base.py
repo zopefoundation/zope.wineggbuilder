@@ -162,7 +162,7 @@ class PYPI(object):
         return self.proxy.package_releases(package_name, show_hidden)
 
     def release_urls(self, package_name, version):
-        pass
+        return self.proxy.release_urls(package_name, version)
 
     def release_data(self, package_name, version):
         pass

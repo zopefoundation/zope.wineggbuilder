@@ -13,15 +13,12 @@
 ##############################################################################
 """Main builder stuff
 """
-__docformat__ = 'ReStructuredText'
 import logging
 import os
-import re
 import sys
 import tempfile
 from collections import defaultdict
 
-import BeautifulSoup
 import ConfigParser
 from distutils.version import StrictVersion
 
@@ -235,25 +232,16 @@ class Package(object):
         LOGGER.debug('getting %s', self.pypiurl)
 
         verFiles = defaultdict(list)
-        simple = self.urlGetterKlass().get(self.pypiurl)
-        soup = BeautifulSoup.BeautifulSoup(simple)
-        VERSION = re.compile(self.name + r'-(\d+\.\d+(\.\d+\w*){0,2})')
         gotSource = False
 
-        for tag in soup('a'):
-            cntnt = str(tag.contents[0]) # str: re does not like non-strings
+        for version in versions:
+            for rdata in pypi.release_urls(self.name, version):
+                filename = rdata['filename']
+                verFiles[version].append(filename)
 
-            m = VERSION.search(cntnt)
-            if m:
-                version = m.group(1)
-                if version not in versions:
-                    continue
-                LOGGER.debug('Got a file: %s', cntnt)
-                verFiles[version].append(cntnt)
-
-                if (cntnt.endswith('.zip')
-                    or cntnt.endswith('.tar.gz')
-                    or cntnt.endswith('tgz')):
+                if (filename.lower().endswith('.zip')
+                    or filename.lower().endswith('.tar.gz')
+                    or filename.lower().endswith('tgz')):
                     gotSource = True
 
         if self.needSource and not gotSource:
