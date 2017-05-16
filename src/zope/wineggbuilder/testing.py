@@ -238,6 +238,44 @@ PYPI_RELEASES = {
     'zope.proxy': ['3.6.0', '3.5.0', '3.4.2', '3.4.1', '3.4.0', '3.3.0'],
 }
 
+# only filename is used
+RELEASE_URLS = {
+    'zope.proxy': {
+        '3.3.0': [
+            {'filename': 'zope.proxy-3.3.0-py2.5-win32.egg'},
+            {'filename': 'zope.proxy-3.3.0.tar.gz'},
+            {'filename': 'zope.proxy-3.3.0-py2.4-win32.egg'},
+        ],
+        '3.4.0': [
+            {'filename': 'zope.proxy-3.4.0-py2.4-win32.egg'},
+            {'filename': 'zope.proxy-3.4.0.tar.gz'},
+            {'filename': 'zope.proxy-3.4.0-py2.5-win32.egg'},
+            {'filename': 'zope.proxy-3.4.0.zip'},
+        ],
+        '3.4.1': [
+            {'filename': 'zope.proxy-3.4.1-py2.4-win32.egg'},
+            {'filename': 'zope.proxy-3.4.1.zip'},
+        ],
+        '3.4.2': [
+            {'filename': 'zope.proxy-3.4.2-py2.5-win32.egg'},
+            {'filename': 'zope.proxy-3.4.2-py2.4-win32.egg'},
+            {'filename': 'zope.proxy-3.4.2.zip'},
+            {'filename': 'zope.proxy-3.4.2-py2.6-win32.egg'},
+            {'filename': 'zope.proxy-3.4.2-py2.6-win32.egg'},
+        ],
+        '3.5.0': [
+            {'filename': 'zope.proxy-3.5.0-py2.6-win-amd64.egg'},
+            {'filename': 'zope.proxy-3.5.0-py2.6-win32.egg'},
+            {'filename': 'zope.proxy-3.5.0-py2.5-win32.egg'},
+            {'filename': 'zope.proxy-3.5.0.tar.gz'},
+            {'filename': 'zope.proxy-3.5.0-py2.4-win32.egg'},
+        ],
+        '3.6.0': [
+            {'filename': 'zope.proxy-3.6.0-py2.6-win-amd64.egg'},
+            {'filename': 'zope.proxy-3.6.0-py2.6-win32.egg'},
+        ],
+    }}
+
 class MockPYPI(object):
     def __init__(self):
         pass
@@ -254,9 +292,9 @@ class MockPYPI(object):
 
         return PYPI_RELEASES[package_name]
 
-    #def release_urls(self, package_name, version):
-    #    pass
-    #
+    def release_urls(self, package_name, version):
+        return RELEASE_URLS[package_name][version]
+
     #def release_data(self, package_name, version):
     #    pass
     #
@@ -265,43 +303,3 @@ class MockPYPI(object):
     #
     #def changelog(self, since):
     #    pass
-
-RESPONSES = {
-    'http://pypi.python.org/simple/zope.proxy/' :
-        """<html><head><title>Links for zope.proxy</title></head><body><h1>Links for zope.proxy</h1><a href="../../packages/source/z/zope.proxy/zope.proxy-3.6.0.zip#md5=896d9c53837d01875fe55cc69f43f7aa">zope.proxy-3.6.0.zip</a><br/>
-<a href="../../packages/2.6/z/zope.proxy/zope.proxy-3.6.0-py2.6-win-amd64.egg#md5=8cb96ee292e127df8c4524ec486a05b6">zope.proxy-3.6.0-py2.6-win-amd64.egg</a><br/>
-<a href="../../packages/2.6/z/zope.proxy/zope.proxy-3.5.0-py2.6-win-amd64.egg#md5=f3bdd81ef3d3f21db5cb4d9fe99b2b6e">zope.proxy-3.5.0-py2.6-win-amd64.egg</a><br/>
-<a href="../../packages/2.6/z/zope.proxy/zope.proxy-3.5.0-py2.6-win32.egg#md5=ae9c7e9ecf949422abd98c23507636ac">zope.proxy-3.5.0-py2.6-win32.egg</a><br/>
-<a href="../../packages/2.4/z/zope.proxy/zope.proxy-3.4.0-py2.4-win32.egg#md5=c23cda9412f8859d0d2d36c16e69a5a8">zope.proxy-3.4.0-py2.4-win32.egg</a><br/>
-<a href="../../packages/source/z/zope.proxy/zope.proxy-3.4.0.tar.gz#md5=a9e234e90bc4a16bb62b967d4a0412c6">zope.proxy-3.4.0.tar.gz</a><br/>
-<a href="../../packages/2.5/z/zope.proxy/zope.proxy-3.5.0-py2.5-win32.egg#md5=7ea1aa4dd320e9cceaae5031026259cc">zope.proxy-3.5.0-py2.5-win32.egg</a><br/>
-<a href="../../packages/source/z/zope.proxy/zope.proxy-3.5.0.tar.gz#md5=ac5fc916b572bc3ff630b49cda52d94a">zope.proxy-3.5.0.tar.gz</a><br/>
-<a href="../../packages/source/z/zope.proxy/zope.proxy-3.4.2.zip#md5=ad51f25d4d86be7cfebb70bd77421f92">zope.proxy-3.4.2.zip</a><br/>
-<a href="../../packages/2.4/z/zope.proxy/zope.proxy-3.5.0-py2.4-win32.egg#md5=8c73b52e76f6aea17b1542b85d8b58f4">zope.proxy-3.5.0-py2.4-win32.egg</a><br/>
-<a href="../../packages/2.6/z/zope.proxy/zope.proxy-3.4.2-py2.6-win32.egg#md5=3eff1609ba267b2b3becbe2eb37fb401">zope.proxy-3.4.2-py2.6-win32.egg</a><br/>
-<a href="../../packages/2.4/z/zope.proxy/zope.proxy-3.4.1-py2.4-win32.egg#md5=02da4f1338131d7feffabe06488962c6">zope.proxy-3.4.1-py2.4-win32.egg</a><br/>
-<a href="../../packages/source/z/zope.proxy/zope.proxy-3.4.1.zip#md5=b4d5c7345a7a2a60071a6f62db9592c6">zope.proxy-3.4.1.zip</a><br/>
-<a href="../../packages/2.5/z/zope.proxy/zope.proxy-3.4.2-py2.5-win32.egg#md5=6c1661131b0dd8c8e667b47d1e7707e7">zope.proxy-3.4.2-py2.5-win32.egg</a><br/>
-<a href="../../packages/2.4/z/zope.proxy/zope.proxy-3.4.2-py2.4-win32.egg#md5=67184719dfe56838be7241391721f11d">zope.proxy-3.4.2-py2.4-win32.egg</a><br/>
-<a href="../../packages/2.5/z/zope.proxy/zope.proxy-3.4.0-py2.5-win32.egg#md5=aa0e2c00e011b026820630150ca028ba">zope.proxy-3.4.0-py2.5-win32.egg</a><br/>
-<a href="../../packages/2.5/z/zope.proxy/zope.proxy-3.3.0-py2.5-win32.egg#md5=bcf3c132a36906787a07aac7226cbb1b">zope.proxy-3.3.0-py2.5-win32.egg</a><br/>
-<a href="../../packages/source/z/zope.proxy/zope.proxy-3.3.0.tar.gz#md5=64128ab4feeb5bfd8a66c4cdd5192a31">zope.proxy-3.3.0.tar.gz</a><br/>
-<a href="../../packages/2.6/z/zope.proxy/zope.proxy-3.6.0-py2.6-win32.egg#md5=6984986850f74abdb3cd0c738579cb16">zope.proxy-3.6.0-py2.6-win32.egg</a><br/>
-<a href="../../packages/source/z/zope.proxy/zope.proxy-3.4.0.zip#md5=3fef9f29c8b920c9f20aa3a2f92afa70">zope.proxy-3.4.0.zip</a><br/>
-<a href="../../packages/2.4/z/zope.proxy/zope.proxy-3.3.0-py2.4-win32.egg#md5=554d10d694d7e5ea9468d88c1c078387">zope.proxy-3.3.0-py2.4-win32.egg</a><br/>
-<a href="http://svn.zope.org/zope.proxy" rel="homepage">3.3.0 home_page</a><br/>
-<a href="http://docs.python.org/ref/sequence-methods.html">http://docs.python.org/ref/sequence-methods.html</a><br/>
-</body></html>""",
-}
-
-class MockURLGetter(object):
-    def __init__(self):
-        pass
-
-    def __call__(self):
-        return self
-
-    def get(self, url):
-        global MOCKLOG
-        MOCKLOG.append('urlget: %s' % url)
-        return RESPONSES[url]

@@ -132,7 +132,6 @@ class Compiler(object):
 class Package(object):
     #hook to enable testing
     pypiKlass = base.PYPI
-    urlGetterKlass = base.URLGetter
     svnKlass = base.SVN
     gitKlass = base.Git
     dlKlass = base.Download
@@ -229,14 +228,13 @@ class Package(object):
             return
 
         #2 get file list of each version
-        LOGGER.debug('getting %s', self.pypiurl)
-
         verFiles = defaultdict(list)
         gotSource = False
 
         for version in versions:
             for rdata in pypi.release_urls(self.name, version):
                 filename = rdata['filename']
+                LOGGER.debug('Got a file: %s', filename)
                 verFiles[version].append(filename)
 
                 if (filename.lower().endswith('.zip')

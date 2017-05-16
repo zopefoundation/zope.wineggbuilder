@@ -16,33 +16,30 @@ Install mocks:
     >>> oldPYPI = build.Package.pypiKlass
     >>> build.Package.pypiKlass = testing.MockPYPI()
 
-    >>> oldURLgetter = build.Package.urlGetterKlass
-    >>> build.Package.urlGetterKlass = testing.MockURLGetter()
-
 Let's see:
 
     >>> import os.path
     >>> testininame = os.path.join(os.path.dirname(build.__file__), 'test.ini')
     >>> build.main([testininame, '-v', '-s']) # doctest: +REPORT_NDIFF
-    INFO - loading configuration from ...\src\zope\wineggbuilder\test.ini
+    INFO - loading configuration from ...test.ini
     INFO - Starting to build
     INFO - Processing zope.proxy [zope.proxy_34_to_35]
-    DEBUG - getting http://pypi.python.org/simple/zope.proxy/
-    DEBUG - Got a file: zope.proxy-3.5.0-py2.6-win-amd64.egg
-    DEBUG - Got a file: zope.proxy-3.5.0-py2.6-win32.egg
     DEBUG - Got a file: zope.proxy-3.4.0-py2.4-win32.egg
     DEBUG - Got a file: zope.proxy-3.4.0.tar.gz
-    DEBUG - Got a file: zope.proxy-3.5.0-py2.5-win32.egg
-    DEBUG - Got a file: zope.proxy-3.5.0.tar.gz
-    DEBUG - Got a file: zope.proxy-3.4.2.zip
-    DEBUG - Got a file: zope.proxy-3.5.0-py2.4-win32.egg
-    DEBUG - Got a file: zope.proxy-3.4.2-py2.6-win32.egg
+    DEBUG - Got a file: zope.proxy-3.4.0-py2.5-win32.egg
+    DEBUG - Got a file: zope.proxy-3.4.0.zip
     DEBUG - Got a file: zope.proxy-3.4.1-py2.4-win32.egg
     DEBUG - Got a file: zope.proxy-3.4.1.zip
     DEBUG - Got a file: zope.proxy-3.4.2-py2.5-win32.egg
     DEBUG - Got a file: zope.proxy-3.4.2-py2.4-win32.egg
-    DEBUG - Got a file: zope.proxy-3.4.0-py2.5-win32.egg
-    DEBUG - Got a file: zope.proxy-3.4.0.zip
+    DEBUG - Got a file: zope.proxy-3.4.2.zip
+    DEBUG - Got a file: zope.proxy-3.4.2-py2.6-win32.egg
+    DEBUG - Got a file: zope.proxy-3.4.2-py2.6-win32.egg
+    DEBUG - Got a file: zope.proxy-3.5.0-py2.6-win-amd64.egg
+    DEBUG - Got a file: zope.proxy-3.5.0-py2.6-win32.egg
+    DEBUG - Got a file: zope.proxy-3.5.0-py2.5-win32.egg
+    DEBUG - Got a file: zope.proxy-3.5.0.tar.gz
+    DEBUG - Got a file: zope.proxy-3.5.0-py2.4-win32.egg
     DEBUG - Checking if build required for [zope.proxy_34_to_35] zope.proxy 3.4.0 py25_32
     DEBUG - Build not required for [zope.proxy_34_to_35] zope.proxy 3.4.0 py25_32
     DEBUG - Checking if build required for [zope.proxy_34_to_35] zope.proxy 3.4.0 py26_32
@@ -306,4 +303,3 @@ Remove mocks:
     >>> base.SVN.commandKlass = oldSVNcommand
     >>> build.Compiler.commandKlass = oldCompilerCommand
     >>> build.Package.pypiKlass = oldPYPI
-    >>> build.Package.urlGetterKlass = oldURLgetter
